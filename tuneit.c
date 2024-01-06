@@ -33,6 +33,9 @@ static const char *frenchNotes[12] = {"La","La#","Si","Do","Do#","Ré","Ré#",
 				 "Mi","Fa","Fa#","Sol","Sol#"};
 static const char **notes = englishNotes;
 
+// allow configurable meter width
+int meterWidth = 21;
+
 static void
 displayFrequency (double freq)
 {
@@ -56,12 +59,22 @@ displayFrequency (double freq)
   while (nfreq/freq > D_NOTE_SQRT) nfreq /= 2.0;
   while (freq/nfreq > D_NOTE_SQRT) nfreq *= 2.0;
   double cents = 1200*(log(freq/nfreq)/LOG_2);
-  char buffer[21];
-  for (i = 0; i<20; ++i) buffer[i] = '-';
-  buffer[10] = '+';
-  buffer[(int)((cents+50)/5)] = '|';
-  printf("Note %-2s (%8.3fHz): %+3.f cents (%8.3fHz)  %.20s\r",
-	 notes[note], nfreq, cents, freq, buffer);
+  char buffer[meterWidth+1];
+  int meterHalf = (meterWidth - 1) / 2;
+  double meterHalfRatio = 50.0 / meterHalf;
+  int meterIdx = (int)((cents+50)/meterHalfRatio);
+  if (meterIdx < 0 || meterIdx >= meterWidth) {
+    printf("\r\nPANIC: cents=%+3.f meterIdx=%i\n", cents, meterIdx);
+    exit(1);
+  }
+  for (i = 0; i<meterWidth; ++i)
+      buffer[i] = '-';
+  buffer[meterWidth] = '\0';
+  buffer[meterHalf] = '+';
+  buffer[meterIdx] = '|';
+  
+  printf("Note=%-2s:cents=%+3.f:freq=%8.3fHz:note=%8.3fHz:%-*s\r",
+	 notes[note], cents, freq, nfreq, meterWidth, buffer);
   fflush(stdout);
 }
 
@@ -595,7 +608,7 @@ int main(int argc, char *argv[])
 
   audio = &alsaInterface;
   algorithm = &schmittTriggerAlgorithm;
-  while ((c = getopt(argc, argv, "fijl:r:t:")) != -1) {
+  while ((c = getopt(argc, argv, "fijl:r:t:w:")) != -1) {
     switch (c) {
       case 'f':
 	algorithm = &fftAlgorithm;
@@ -615,12 +628,21 @@ int main(int argc, char *argv[])
       case 't':
 	aFreq = atof(optarg);
 	break;
+      case 'w':
+	meterWidth = atoi(optarg);
+	if (meterWidth < 4 || meterWidth > 101) {
+	  fprintf(stderr, "Invalid meter width: must be between 5 and 101\n");
+	  exit(EXIT_FAILURE);
+	}
+	meterWidth |= 1; // force it to be odd
+	break;
       default:
 	fprintf(stderr, "%s [OPTIONS...] [captureDevice]\n", argv[0]);
 	fprintf(stderr, "Valid options:\n");
 	fprintf(stderr, "\t-f\t\tUse the more CPU intensive FFT based algorithm\n");
 	fprintf(stderr, "\t-i\t\tList available input ports and exit\n");
 	fprintf(stderr, "\t-j\t\tUse JACK as the audio transport system\n");
+	fprintf(stderr, "\t-w WIDTH\tDisplay meter with width WIDTH (5 to 101, default is 21)\n");
 	fprintf(stderr, "\t-l LATENCY\tMeasurement window size in 1/N seconds (default is 10)\n");
 	fprintf(stderr, "\t-r RATE\t\tSet sample rate (default is 48000)\n");
 	fprintf(stderr, "\t-t HERTZ\tTune the A note of the scale (default is 440.0)\n");
