@@ -73,10 +73,7 @@ displayFrequency (double freq)
       buffer[i] = '-';
   buffer[meterWidth] = '\0';
   buffer[meterIdx] = '|';
-  buffer[meterHalf] = notes[note][0];
-  if (strlen(notes[note]) > 1) {
-    buffer[meterHalf+1] = notes[note][1];
-  }
+  strncpy(buffer+meterHalf, notes[note], strlen(notes[note]));
   
   printf("Note=%-2s:cents=%+3.f:freq=%8.3fHz:note=%8.3fHz:%-*s\r",
 	 notes[note], cents, freq, nfreq, meterWidth, buffer);
