@@ -10,6 +10,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 
 static unsigned int rate = 48000;
 
@@ -70,8 +72,11 @@ displayFrequency (double freq)
   for (i = 0; i<meterWidth; ++i)
       buffer[i] = '-';
   buffer[meterWidth] = '\0';
-  buffer[meterHalf] = '+';
   buffer[meterIdx] = '|';
+  buffer[meterHalf] = notes[note][0];
+  if (strlen(notes[note]) > 1) {
+    buffer[meterHalf+1] = notes[note][1];
+  }
   
   printf("Note=%-2s:cents=%+3.f:freq=%8.3fHz:note=%8.3fHz:%-*s\r",
 	 notes[note], cents, freq, nfreq, meterWidth, buffer);
