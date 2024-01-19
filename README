@@ -24,6 +24,10 @@ Valid options:
 	-l LATENCY	Measurement window size in 1/N seconds (default is 10)
 	-r RATE		Set desired ALSA sample rate (default is 48000)
 	-t HERTZ	Tune the A note of the scale (default is 440.0)
+	-w WIDTH	Display the meter at given width (min 5, max 101, default 21)
+	-s 		Simple mode, only display the meter
 
- -- Mario Lang <mlang@delysid.org>
+ -- Original by Mario Lang <mlang@delysid.org>
+ -- Updated by David McNab <davidmcnabnz@gmail.com> to add configurable meter width
+    and more easily parseable output
 

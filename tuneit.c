@@ -37,6 +37,7 @@ static const char **notes = englishNotes;
 
 // allow configurable meter width
 int meterWidth = 21;
+char meterOnly = 0;
 
 static void
 displayFrequency (double freq)
@@ -74,9 +75,13 @@ displayFrequency (double freq)
   buffer[meterWidth] = '\0';
   buffer[meterIdx] = '|';
   strncpy(buffer+meterHalf, notes[note], strlen(notes[note]));
-  
-  printf("Note=%-2s:cents=%+3.f:freq=%8.3fHz:note=%8.3fHz:%-*s\r",
-	 notes[note], cents, freq, nfreq, meterWidth, buffer);
+
+  if (meterOnly) {
+    printf("%-*s\r", meterWidth, buffer);
+  } else {
+    printf("Note=%-2s:cents=%+3.f:freq=%9.3fHz:note=%9.3fHz:%-*s\r",
+	   notes[note], cents, freq, nfreq, meterWidth, buffer);
+  }
   fflush(stdout);
 }
 
@@ -610,7 +615,7 @@ int main(int argc, char *argv[])
 
   audio = &alsaInterface;
   algorithm = &schmittTriggerAlgorithm;
-  while ((c = getopt(argc, argv, "fijl:r:t:w:")) != -1) {
+  while ((c = getopt(argc, argv, "fijsl:r:t:w:")) != -1) {
     switch (c) {
       case 'f':
 	algorithm = &fftAlgorithm;
@@ -630,6 +635,9 @@ int main(int argc, char *argv[])
       case 't':
 	aFreq = atof(optarg);
 	break;
+      case 's':
+	meterOnly = 1;
+	break;
       case 'w':
 	meterWidth = atoi(optarg);
 	if (meterWidth < 4 || meterWidth > 101) {
@@ -648,6 +656,7 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "\t-l LATENCY\tMeasurement window size in 1/N seconds (default is 10)\n");
 	fprintf(stderr, "\t-r RATE\t\tSet sample rate (default is 48000)\n");
 	fprintf(stderr, "\t-t HERTZ\tTune the A note of the scale (default is 440.0)\n");
+	fprintf(stderr, "\t-s\t\tSimple mode, only display meter\n");
 	exit(EXIT_FAILURE);
     }
   }
